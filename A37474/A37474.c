@@ -141,7 +141,7 @@ void ETMDigitalUpdateInput(TYPE_DIGITAL_INPUT* input, unsigned int current_value
 // -------------------------- GLOBAL VARIABLES --------------------------- //
 TYPE_GLOBAL_DATA_A37474 global_data_A37474;
 LTC265X U32_LTC2654;
-
+MCP23008 U12_MCP23008;
 
 int main(void) {
   global_data_A37474.control_state = STATE_START_UP;
@@ -516,7 +516,23 @@ void InitializeA37474(void) {
   SetupLTC265X(&U32_LTC2654, ETM_SPI_PORT_2, FCY_CLK, LTC265X_SPI_2_5_M_BIT, _PIN_RG15, _PIN_RC1);
 
   //Configure EEPROM
+  ETMEEPromUseExternal();
   ETMEEPromConfigureExternalDevice(EEPROM_SIZE_8K_BYTES, FCY_CLK, 400000, EEPROM_I2C_ADDRESS_0, 1);
+  
+  U64_MCP23008.address = MCP23008_ADDRESS_0;
+  U64_MCP23008.i2c_port = I2C_PORT;
+  U64_MCP23008.pin_reset = _PIN_NOT_CONNECTED;
+  U64_MCP23008.pin_int_a = _PIN_NOT_CONNECTED;
+  U64_MCP23008.pin_int_b = _PIN_NOT_CONNECTED;
+  U64_MCP23008.output_latch_a_in_ram = MCP23008_U64_LATA_INITIAL;
+  U64_MCP23008.output_latch_b_in_ram = MCP23008_U64_LATB_INITIAL;
+  
+  
+  i2c_test |= MCP23008WriteSingleByte(&U12_MCP23008, MCP23008_REGISTER_IOCON, MCP23008_DEFAULT_IOCON);
+  i2c_test |= MCP23008WriteSingleByte(&U12_MCP23008, MCP23008_REGISTER_OLATA, MCP23008_U12_OLATA_VALUE);
+  i2c_test |= MCP23008WriteSingleByte(&U12_MCP23008, MCP23008_REGISTER_IODIRA, MCP23008_U12_IODIRA_VALUE);
+  i2c_test |= MCP23008WriteSingleByte(&U12_MCP23008, MCP23008_REGISTER_IPOLA, MCP23008_U12_IPOLA_VALUE);
+  
 
   // ------------- Configure Internal ADC --------- //
   ADCON1 = ADCON1_SETTING;             // Configure the high speed ADC module based on H file parameters

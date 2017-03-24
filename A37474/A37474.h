@@ -66,16 +66,9 @@
  
   RB0  - ICD  - PROGRAM
   RB1  - ICD  - PROGRAM
-  RB3  - AN3  - POT EK
-  RB4  - AN4  - POT VTOP
-  RB5  - AN5  - POT HTR
-  RB6  - AN6  - REF HTR
-  RB7  - AN7  - REF VTOP
-  RB13 - AN13 - REF EK
+  RB13 - AN13 - PIC ADC 5V MON
   RB14 - AN14 - PIC ADC +15V MON
   RB15 - AN15 - PIC ADC -15V MON
-
-  RC1  - DAC LDAC  (Configured by DAC module)
 
   RD8  - PIN_CUSTOMER_BEAM_ENABLE
 
@@ -97,7 +90,12 @@
   RG7  - SPI2 DI
   RG8  - SPI2 DO
   RG14 - Reset Detect
-  RG15 - DAC CS/LD (Configured by DAC module)
+  
+  Configured by other software modules and should be left as inputs during port configuration:
+  RA15 (Ethernet Module Interrupt Input)
+  RC1  (Ethernet Module Reset Output)
+  RD11 (Ethernet Module Clock Input)
+  RG15 (Ethernet Module CS Output)
 
 */
 
@@ -267,7 +265,8 @@
   
 // MAX1230 Control Words
 #define MAX1230_CONVERSION_BYTE                      0b10000011
-#define MAX1230_SETUP_BYTE                           0b01101000
+//#define MAX1230_SETUP_BYTE                           0b01101000    //with internal ref
+#define MAX1230_SETUP_BYTE                           0b01100100    //with external ref
 #define MAX1230_AVERAGE_BYTE                         0b00111000
 #define MAX1230_RESET_BYTE                           0b00010000
 

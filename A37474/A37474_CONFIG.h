@@ -352,6 +352,38 @@
 
 
 
+// -------------- Interface board Configuration ---------------------
+
+#define SELECT_HV_ENABLE_FIBER                0xFF
+#define SELECT_HV_ENABLE_DISCRETE             0xFE
+#define SELECT_HV_ENABLE_SERIAL               0xFD
+#define SELECT_HV_DISABLE                     0xFC
+
+
+#define SELECT_BEAM_ENABLE_FIBER              0xFF
+#define SELECT_BEAM_ENABLE_DISCRETE           0xFB
+#define SELECT_BEAM_ENABLE_SERIAL             0xF7
+#define SELECT_BEAM_DISABLE                   0xF3
+
+
+#define SELECT_HV_ILOCK_ENABLE_FIBER          0xFF
+#define SELECT_HV_ILOCK_ENABLE_DISCRETE       0xEF
+#define SELECT_HV_ILOCK_ENABLE_SERIAL         0xDF
+#define SELECT_HV_ILOCK_EXTERNAL_CONTROL      0xCF
+
+
+#define PULSE_GATE_FIBER                      0xBF
+#define PULSE_GATE_DISCRETE                   0xFF
+
+
+#ifdef A37474_000
+
+#define CONFIG_SELECT_PIN_BYTE               (SELECT_HV_ENABLE_SERIAL & SELECT_BEAM_ENABLE_SERIAL & SELECT_HV_ILOCK_EXTERNAL_CONTROL & PULSE_GATE_DISCRETE)
+
+#endif
+
+
+
 // ----------- Timers configurations - ALL Times are in 10ms Units --------------------
 #define LED_STARTUP_FLASH_TIME                500      // Time LEDs will flash at startup
 #define MAX_HEATER_RAMP_UP_TIME               HEATER_RAMP_TIME    // If the heater does not reach it's programed voltage in this time a fault will be generated
