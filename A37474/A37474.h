@@ -19,6 +19,7 @@
 #include <uart.h>
 #include "ETM.h"
 #include "P1395_CAN_SLAVE.h"
+#include "MCP23008.h"
 #include "FIRMWARE_VERSION.h"
 //#include "faults.h"
 
@@ -108,6 +109,22 @@
 
 
 /*
+   F E D C B A 9 8 7 6 5 4 3 2 1 0
+
+A  0 1 0 1 0 1 1 0 0 0 0 0 0 0 0 0
+
+B  1 1 1 0 0 0 0 0 1 1 1 1 1 0 1 1 
+
+C  0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 
+
+D  0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 0 
+
+E  0 0 0 0 0 0 0 1 1 1 0 0 1 1 1 1 
+
+F  1 1 0 0 0 0 0 1 1 1 0 0 1 1 1 1 
+
+*/
+/*
   This sets up the ADC to work as following
   AUTO Sampeling
   External Vref+/Vref-
@@ -122,26 +139,26 @@
 #define ADCON2_SETTING          (ADC_VREF_EXT_EXT & ADC_SCAN_ON & ADC_SAMPLES_PER_INT_8 & ADC_ALT_BUF_ON & ADC_ALT_INPUT_OFF)
 #define ADCON3_SETTING          (ADC_SAMPLE_TIME_4 & ADC_CONV_CLK_SYSTEM & ADC_CONV_CLK_9Tcy2)
 #define ADCHS_SETTING           (ADC_CH0_POS_SAMPLEA_AN3 & ADC_CH0_NEG_SAMPLEA_VREFN & ADC_CH0_POS_SAMPLEB_AN3 & ADC_CH0_NEG_SAMPLEB_VREFN)
-#define ADPCFG_SETTING          (ENABLE_AN3_ANA & ENABLE_AN4_ANA & ENABLE_AN5_ANA & ENABLE_AN6_ANA & ENABLE_AN7_ANA & ENABLE_AN13_ANA & ENABLE_AN14_ANA & ENABLE_AN15_ANA)
-#define ADCSSL_SETTING          (SKIP_SCAN_AN0 & SKIP_SCAN_AN1 & SKIP_SCAN_AN2 & SKIP_SCAN_AN8 & SKIP_SCAN_AN9 & SKIP_SCAN_AN10 & SKIP_SCAN_AN11 & SKIP_SCAN_AN12)
+#define ADPCFG_SETTING          (ENABLE_AN13_ANA & ENABLE_AN14_ANA & ENABLE_AN15_ANA)
+#define ADCSSL_SETTING          (SKIP_SCAN_AN0 & SKIP_SCAN_AN1 & SKIP_SCAN_AN2 & SKIP_SCAN_AN3 & SKIP_SCAN_AN4 & SKIP_SCAN_AN5 & SKIP_SCAN_AN6 & SKIP_SCAN_AN7 & SKIP_SCAN_AN8 & SKIP_SCAN_AN9 & SKIP_SCAN_AN10 & SKIP_SCAN_AN11 & SKIP_SCAN_AN12)
 
 
 
 
 // Digital Inputs
-#define PIN_CUSTOMER_HV_ON                            _RA14
-#define ILL_PIN_CUSTOMER_HV_ON_ENABLE_HV              1
+#define PIN_CUSTOMER_HV_ON                           _RA14
+#define ILL_PIN_CUSTOMER_HV_ON_ENABLE_HV             1
 
-#define PIN_CUSTOMER_BEAM_ENABLE                      _RD8
-#define ILL_PIN_CUSTOMER_BEAM_ENABLE_BEAM_ENABLED     0
+#define PIN_CUSTOMER_BEAM_ENABLE                     _RD8
+#define ILL_PIN_CUSTOMER_BEAM_ENABLE_BEAM_ENABLED    1
 
-#define PIN_GRID_PULSE_INTERRUPT                      _RA12
-#define PIN_INTERLOCK_RELAY_CLOSED                    _RD4
-#define PIN_GRID_PULSE_INPUT_CAPTURE                  _RD12
+#define PIN_GRID_PULSE_INTERRUPT                     _RA12
+#define PIN_INTERLOCK_RELAY_CLOSED                   _RD4
+#define PIN_GRID_PULSE_INPUT_CAPTURE                 _RD12
 
 //------------------- GUN Driver Interface I/O ------------------------- //
-#define PIN_CS_DAC                                    _LATD13
-#define OLL_PIN_CS_DAC_SELECTED                       1
+#define PIN_CS_DAC                                   _LATD13
+#define OLL_PIN_CS_DAC_SELECTED                      1
 
 #define PIN_CS_ADC                                   _LATD14
 #define OLL_PIN_CS_ADC_SELECTED                      1
@@ -152,21 +169,24 @@
 
 
 // Digital Outputs
-#define PIN_CPU_WARMUP_STATUS                        _LATD0
-#define PIN_CPU_STANDBY_STATUS                       _LATD11
-#define PIN_CPU_HV_ON_STATUS                         _LATD10
-#define PIN_CPU_BEAM_ENABLE_STATUS                   _LATF5  // DPARKER THERE IS ERROR ON SCHEMATIC
-#define PIN_CPU_SYSTEM_OK_STATUS                     _LATA15
-#define PIN_CPU_EXTRA_STATUS                         _LATD3
-#define OLL_STATUS_ACTIVE                            1
 
-#define PIN_CPU_HV_ENABLE                            _LATD2
-#define PIN_CPU_BEAM_ENABLE                          _LATD1
-#define OLL_PIN_CPU_BEAM_ENABLE_BEAM_ENABLED         1
+#define PIN_ILOCK_ON_SERIAL                          _LATD3
+#define PIN_HV_ON_SERIAL                             _LATD2
+#define PIN_BEAM_ENABLE_SERIAL                       _LATD1
+#define OLL_SERIAL_ENABLE                            1
+
+#define PIN_CPU_15V_SUPPLY_ENABLE                    _LATD10
+
+#define OLL_ENABLE                            1
+
+#define PIN_CPU_ILOCK_ENABLE                         _LATD2
+#define PIN_CPU_PULSE_ENABLE                         _LATD1
+
+#define OLL_PIN_CPU_PULSE_ENABLE_PULSE_ENABLED       1
     // OLL_PIN_CPU_HV_ENABLE_HV_ENABLED defined in A37474_CONFIG.h file
 
 
-#define PIN_RS485_ENABLE                             _LATF4  // DPARKER THERE IS ERROR ON SCHEMATIC
+#define PIN_RS485_ENABLE                             _LATF4
 
 
 // LED Indicator Output Pins
@@ -308,6 +328,8 @@ typedef struct {
   unsigned int pot_references_always;
   unsigned int analog_references_always;
   unsigned int modbus_controls_enabled;
+  unsigned int modbus_references_enabled;
+  unsigned int ethernet_references_enabled;
   
   unsigned int accumulator_counter;             // This counts the number of converstion on the internal ADC (used for averaging)
   unsigned int adc_read_error_count;            // This counts the total number of errors on reads from the adc on the converter logic board
@@ -382,12 +404,8 @@ typedef struct {
   AnalogInput  input_dac_monitor;
 
   // These are the anlog input from the PICs internal DAC
-  AnalogInput  pot_htr;     // an3
-  AnalogInput  pot_vtop;    // an4
-  AnalogInput  pot_ek;      // an5
-  AnalogInput  ref_htr;     // an6
-  AnalogInput  ref_vtop;    // an7
-  AnalogInput  ref_ek;      // an13
+
+  AnalogInput  pos_5v_mon;  // an13
   AnalogInput  pos_15v_mon; // an14
   AnalogInput  neg_15v_mon; // an15
   

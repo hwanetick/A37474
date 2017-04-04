@@ -382,6 +382,9 @@
 
 #endif
 
+// for test
+#define CONFIG_SELECT_PIN_BYTE               (SELECT_HV_ENABLE_SERIAL & SELECT_BEAM_ENABLE_SERIAL & SELECT_HV_ILOCK_EXTERNAL_CONTROL & PULSE_GATE_DISCRETE)
+
 
 
 // ----------- Timers configurations - ALL Times are in 10ms Units --------------------

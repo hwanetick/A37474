@@ -464,7 +464,7 @@ void DoStateMachine(void) {
 
 
 void InitializeA37474(void) {
- 
+  unsigned int i2c_test = 0;
   // Initialize the status register and load the inhibit and fault masks
 
   _CONTROL_REGISTER = 0;
@@ -519,19 +519,19 @@ void InitializeA37474(void) {
   ETMEEPromUseExternal();
   ETMEEPromConfigureExternalDevice(EEPROM_SIZE_8K_BYTES, FCY_CLK, 400000, EEPROM_I2C_ADDRESS_0, 1);
   
-  U64_MCP23008.address = MCP23008_ADDRESS_0;
-  U64_MCP23008.i2c_port = I2C_PORT;
-  U64_MCP23008.pin_reset = _PIN_NOT_CONNECTED;
-  U64_MCP23008.pin_int_a = _PIN_NOT_CONNECTED;
-  U64_MCP23008.pin_int_b = _PIN_NOT_CONNECTED;
-  U64_MCP23008.output_latch_a_in_ram = MCP23008_U64_LATA_INITIAL;
-  U64_MCP23008.output_latch_b_in_ram = MCP23008_U64_LATB_INITIAL;
+  U12_MCP23008.address = MCP23008_ADDRESS_0;
+  U12_MCP23008.i2c_port = I2C_PORT_1;
+  U12_MCP23008.pin_reset = 1;//_PIN_NOT_CONNECTED;
+  U12_MCP23008.pin_int_a = 1;//_PIN_NOT_CONNECTED;
+  U12_MCP23008.pin_int_b = 1;//_PIN_NOT_CONNECTED;
+  U12_MCP23008.output_latch_a_in_ram = 1;//MCP23008_U64_LATA_INITIAL;
+  U12_MCP23008.output_latch_b_in_ram = 1;//MCP23008_U64_LATB_INITIAL;
   
   
   i2c_test |= MCP23008WriteSingleByte(&U12_MCP23008, MCP23008_REGISTER_IOCON, MCP23008_DEFAULT_IOCON);
-  i2c_test |= MCP23008WriteSingleByte(&U12_MCP23008, MCP23008_REGISTER_OLATA, MCP23008_U12_OLATA_VALUE);
-  i2c_test |= MCP23008WriteSingleByte(&U12_MCP23008, MCP23008_REGISTER_IODIRA, MCP23008_U12_IODIRA_VALUE);
-  i2c_test |= MCP23008WriteSingleByte(&U12_MCP23008, MCP23008_REGISTER_IPOLA, MCP23008_U12_IPOLA_VALUE);
+//  i2c_test |= MCP23008WriteSingleByte(&U12_MCP23008, MCP23008_REGISTER_OLAT, MCP23008_U12_OLAT_VALUE);
+  i2c_test |= MCP23008WriteSingleByte(&U12_MCP23008, MCP23008_REGISTER_IODIR, MCP23008_U12_IODIR_VALUE);
+  i2c_test |= MCP23008WriteSingleByte(&U12_MCP23008, MCP23008_REGISTER_IPOL, MCP23008_U12_IPOL_VALUE);
   
 
   // ------------- Configure Internal ADC --------- //
@@ -689,39 +689,6 @@ void InitializeA37474(void) {
 
   // ----------------- Initialize PIC's internal ADC Inputs --------------------- //
 
-  ETMAnalogInitializeInput(&global_data_A37474.pot_htr,
-			   MACRO_DEC_TO_SCALE_FACTOR_16(POT_HTR_FIXED_SCALE),
-			   POT_HTR_FIXED_OFFSET,
-			   ANALOG_INPUT_9,
-			   NO_OVER_TRIP,
-			   NO_UNDER_TRIP,
-			   NO_TRIP_SCALE,
-			   NO_FLOOR,
-			   NO_RELATIVE_COUNTER,
-			   NO_ABSOLUTE_COUNTER);
-
-
-  ETMAnalogInitializeInput(&global_data_A37474.pot_vtop,
-			   MACRO_DEC_TO_SCALE_FACTOR_16(POT_VTOP_FIXED_SCALE),
-			   POT_VTOP_FIXED_OFFSET,
-			   ANALOG_INPUT_A,
-			   NO_OVER_TRIP,
-			   NO_UNDER_TRIP,
-			   NO_TRIP_SCALE,
-			   NO_FLOOR,
-			   NO_RELATIVE_COUNTER,
-			   NO_ABSOLUTE_COUNTER);
-
-  ETMAnalogInitializeInput(&global_data_A37474.pot_ek,
-			   MACRO_DEC_TO_SCALE_FACTOR_16(POT_EK_FIXED_SCALE),
-			   POT_EK_FIXED_OFFSET,
-			   ANALOG_INPUT_B,
-			   NO_OVER_TRIP,
-			   NO_UNDER_TRIP,
-			   NO_TRIP_SCALE,
-			   NO_FLOOR,
-			   NO_RELATIVE_COUNTER,
-			   NO_ABSOLUTE_COUNTER);
 
 
   ETMAnalogInitializeInput(&global_data_A37474.ref_htr,
@@ -835,17 +802,10 @@ void InitializeA37474(void) {
   global_data_A37474.discrete_commands_always = 1;
 #endif
   
-#ifdef __DISCRETE_REFERENCE
-  global_data_A37474.analog_references_always = 1;
-#endif
-  
 #ifdef __MODBUS_CONTROLS
   global_data_A37474.modbus_controls_enabled = 1;
 #endif
   
-#ifdef __POT_REFERENCE
-  global_data_A37474.pot_references_always = 1;
-#endif
   
 }
 
@@ -972,12 +932,7 @@ void ResetAllFaultInfo(void) {
   ETMAnalogClearFaultCounters(&global_data_A37474.input_24_v_mon);
   ETMAnalogClearFaultCounters(&global_data_A37474.input_dac_monitor);
 
-  ETMAnalogClearFaultCounters(&global_data_A37474.pot_htr);
-  ETMAnalogClearFaultCounters(&global_data_A37474.pot_vtop);
-  ETMAnalogClearFaultCounters(&global_data_A37474.pot_ek);
-  ETMAnalogClearFaultCounters(&global_data_A37474.ref_htr);
-  ETMAnalogClearFaultCounters(&global_data_A37474.ref_vtop);
-  ETMAnalogClearFaultCounters(&global_data_A37474.ref_ek);
+  ETMAnalogClearFaultCounters(&global_data_A37474.pos_5v_mon);
   ETMAnalogClearFaultCounters(&global_data_A37474.pos_15v_mon);
   ETMAnalogClearFaultCounters(&global_data_A37474.neg_15v_mon);
 
@@ -1089,24 +1044,7 @@ void DoA37474(void) {
   
   } else if (global_data_A37474.modbus_controls_enabled) {
 
-#ifdef __A36772_100   
-    if ((PIN_CUSTOMER_HV_ON == ILL_PIN_CUSTOMER_HV_ON_ENABLE_HV) && (modbus_slave_bit_0x02 != 0)) {
-      global_data_A37474.request_hv_enable = 1;
-      _STATUS_CUSTOMER_HV_ON = 1;
-    } else {
-      global_data_A37474.request_hv_enable = 0;
-      _STATUS_CUSTOMER_HV_ON = 0;
-    }
 
-    if ((PIN_CUSTOMER_BEAM_ENABLE == ILL_PIN_CUSTOMER_BEAM_ENABLE_BEAM_ENABLED) && (modbus_slave_bit_0x03 != 0)) {
-      global_data_A37474.request_beam_enable = 1;
-      _STATUS_CUSTOMER_BEAM_ENABLE = 1;
-    } else {
-      global_data_A37474.request_beam_enable = 0;
-      _STATUS_CUSTOMER_BEAM_ENABLE = 0;
-    }
-
-#else 
     if (modbus_slave_bit_0x02) {
       _STATUS_CUSTOMER_HV_ON = 1;         
       if (PIN_CUSTOMER_HV_ON == ILL_PIN_CUSTOMER_HV_ON_ENABLE_HV) {
@@ -1131,7 +1069,7 @@ void DoA37474(void) {
       _STATUS_CUSTOMER_BEAM_ENABLE = 0;
     }
     
-#endif   
+   
   }
   
 #ifdef __CAN_CONTROLS
@@ -1160,15 +1098,6 @@ void DoA37474(void) {
     _T2IF = 0;
 
     unsigned int timer_report;
-//    if (_SYNC_CONTROL_HIGH_SPEED_LOGGING) {
-//      spoof_counter++;
-//      if (spoof_counter >= 10) {
-//	spoof_counter = 0;
-//	next_pulse_count++;
-//	ETMCanSpoofPulseSyncNextPulseLevel();
-//	ETMCanSpoofAFCHighSpeedDataLog();
-//      }
-//    }
     
     SetStateMessage (global_data_A37474.current_state_msg);
   
@@ -1183,6 +1112,20 @@ void DoA37474(void) {
     } else {
       global_data_A37474.reset_active = 1;
     }  
+#endif
+    
+#ifdef __MODBUS_CONTROLS
+    
+#endif
+    
+    
+#ifdef __ETHERNET_CONTROLS
+        
+#endif
+    
+    
+#ifdef __DISCRETE_CONTROLS
+        
 #endif
 
     // Deciding whether to use discrete reset command or Modbus reset command    
@@ -1328,24 +1271,16 @@ void DoA37474(void) {
 //    DACWriteChannel(LTC265X_WRITE_AND_UPDATE_DAC_H, global_data_A37474.dac_digital_watchdog_oscillator);
     
     // Scale and Calibrate the internal ADC Readings
-    ETMAnalogScaleCalibrateADCReading(&global_data_A37474.pot_htr);
-    ETMAnalogScaleCalibrateADCReading(&global_data_A37474.pot_vtop);
-    ETMAnalogScaleCalibrateADCReading(&global_data_A37474.pot_ek);
-    ETMAnalogScaleCalibrateADCReading(&global_data_A37474.ref_htr);
-    ETMAnalogScaleCalibrateADCReading(&global_data_A37474.ref_vtop);
-    ETMAnalogScaleCalibrateADCReading(&global_data_A37474.ref_ek);
+    ETMAnalogScaleCalibrateADCReading(&global_data_A37474.pos_5v_mon);
     ETMAnalogScaleCalibrateADCReading(&global_data_A37474.pos_15v_mon);
     ETMAnalogScaleCalibrateADCReading(&global_data_A37474.neg_15v_mon);
 
-    ETMCanSlaveSetDebugRegister(0xA, global_data_A37474.pot_htr.reading_scaled_and_calibrated);
-    ETMCanSlaveSetDebugRegister(0xB, global_data_A37474.pot_vtop.reading_scaled_and_calibrated);
-    ETMCanSlaveSetDebugRegister(0xC, global_data_A37474.pot_ek.reading_scaled_and_calibrated);
-    //ETMCanSlaveSetDebugRegister(0xD, global_data_A37474.ref_htr.reading_scaled_and_calibrated);
-    //ETMCanSlaveSetDebugRegister(0xE, global_data_A37474.ref_vtop.reading_scaled_and_calibrated);//
-    //ETMCanSlaveSetDebugRegister(0xF, global_data_A37474.ref_ek.reading_scaled_and_calibrated);
-//    ETMCanSlaveSetDebugRegister(0xA, global_data_A37474.monitor_grid_voltage.set_point); //run_time_counter);
-//    ETMCanSlaveSetDebugRegister(0xB, global_data_A37474.monitor_grid_voltage.dac_setting_scaled_and_calibrated); //fault_restart_remaining);
-//    ETMCanSlaveSetDebugRegister(0xC, global_data_A37474.ref_vtop.reading_scaled_and_calibrated); //power_supply_startup_remaining);
+    ETMCanSlaveSetDebugRegister(0xA, global_data_A37474.pos_5v_mon.reading_scaled_and_calibrated);
+    ETMCanSlaveSetDebugRegister(0xB, global_data_A37474.pos_15v_mon.reading_scaled_and_calibrated);
+    ETMCanSlaveSetDebugRegister(0xC, global_data_A37474.neg_15v_mon.reading_scaled_and_calibrated);
+//    ETMCanSlaveSetDebugRegister(0xA, global_data_A37474.run_time_counter);
+//    ETMCanSlaveSetDebugRegister(0xB, global_data_A37474.fault_restart_remaining);
+//    ETMCanSlaveSetDebugRegister(0xC, global_data_A37474.power_supply_startup_remaining);
     ETMCanSlaveSetDebugRegister(0xD, global_data_A37474.heater_warm_up_time_remaining);
     ETMCanSlaveSetDebugRegister(0xE, global_data_A37474.heater_ramp_up_time);
     ETMCanSlaveSetDebugRegister(0xF, global_data_A37474.control_state);
@@ -1394,14 +1329,6 @@ void DoA37474(void) {
 
     ETMCanSlaveSetDebugRegister(7, global_data_A37474.dac_write_failure_count);
 
-//#ifdef __POT_REFERENCE
-//    // The set points should be based on the pots
-//    ETMAnalogSetOutput(&global_data_A37474.analog_output_high_voltage, global_data_A37474.pot_ek.reading_scaled_and_calibrated);
-//    ETMAnalogSetOutput(&global_data_A37474.analog_output_top_voltage, global_data_A37474.pot_vtop.reading_scaled_and_calibrated);
-//    global_data_A37474.heater_voltage_target                = global_data_A37474.pot_htr.reading_scaled_and_calibrated;
-//    //global_data_A37474.analog_output_high_voltage.set_point = global_data_A37474.pot_ek.reading_scaled_and_calibrated;
-//    //global_data_A37474.analog_output_top_voltage.set_point  = global_data_A37474.pot_vtop.reading_scaled_and_calibrated;
-//#endif
 
 #ifdef __CAN_REFERENCE
     ETMAnalogSetOutput(&global_data_A37474.analog_output_high_voltage, global_data_A37474.can_high_voltage_set_point);
@@ -1411,21 +1338,8 @@ void DoA37474(void) {
     //global_data_A37474.analog_output_top_voltage.set_point  = global_data_A37474.can_pulse_top_set_point;
 #endif
 
-    if ((modbus_slave_bit_0x06 != 0) || (global_data_A37474.analog_references_always == 1)
-                                      || (global_data_A37474.pot_references_always == 1)) {
 
-      if (((modbus_slave_bit_0x06 != 0) && (modbus_slave_bit_0x07 != 0)) || (global_data_A37474.pot_references_always == 1)) {
-        ETMAnalogSetOutput(&global_data_A37474.analog_output_high_voltage, global_data_A37474.pot_ek.reading_scaled_and_calibrated);
-        ETMAnalogSetOutput(&global_data_A37474.analog_output_top_voltage, global_data_A37474.pot_vtop.reading_scaled_and_calibrated);
-        global_data_A37474.heater_voltage_target                = global_data_A37474.pot_htr.reading_scaled_and_calibrated;   
-      } else {
-      // The set points should be based on the analog references
-        ETMAnalogSetOutput(&global_data_A37474.analog_output_high_voltage, global_data_A37474.ref_ek.reading_scaled_and_calibrated);
-        ETMAnalogSetOutput(&global_data_A37474.analog_output_top_voltage, global_data_A37474.ref_vtop.reading_scaled_and_calibrated);
-        global_data_A37474.heater_voltage_target                = global_data_A37474.ref_htr.reading_scaled_and_calibrated;    
-      }
-
-    } else if (global_data_A37474.modbus_controls_enabled) {   
+    if (global_data_A37474.modbus_references_enabled) {   
 
       ETMAnalogSetOutput(&global_data_A37474.analog_output_high_voltage, modbus_slave_hold_reg_0x13);
       ETMAnalogSetOutput(&global_data_A37474.analog_output_top_voltage, modbus_slave_hold_reg_0x12);
@@ -1442,7 +1356,14 @@ void DoA37474(void) {
       if (modbus_slave_hold_reg_0x11 > MAX_PROGRAM_HTR_VOLTAGE) {
           modbus_slave_invalid_data = 1;
       }
+    
+    } else if (global_data_A37474.ethernet_references_enabled) {
+        
+      ETMAnalogSetOutput(&global_data_A37474.analog_output_high_voltage, modbus_slave_hold_reg_0x13);
+        
     }
+    
+    
     
     
     if (global_data_A37474.heater_voltage_target > MAX_PROGRAM_HTR_VOLTAGE) {
@@ -1759,19 +1680,15 @@ void UpdateLEDandStatusOutuputs(void) {
   // Warmup status
   if ((global_data_A37474.control_state >= STATE_START_UP) && (global_data_A37474.control_state <= STATE_HEATER_WARM_UP)) {
     PIN_LED_WARMUP = OLL_LED_ON;
-    PIN_CPU_WARMUP_STATUS = OLL_STATUS_ACTIVE;
   } else {
     PIN_LED_WARMUP = !OLL_LED_ON;
-    PIN_CPU_WARMUP_STATUS = !OLL_STATUS_ACTIVE;
   }
   
   // Standby Status
   if (global_data_A37474.control_state == STATE_HEATER_WARM_UP_DONE) {
     PIN_LED_STANDBY = OLL_LED_ON;
-    PIN_CPU_STANDBY_STATUS = OLL_STATUS_ACTIVE;
   } else {
     PIN_LED_STANDBY = !OLL_LED_ON;
-    PIN_CPU_STANDBY_STATUS = !OLL_STATUS_ACTIVE;
   }
   
   // HV ON Status
@@ -1779,35 +1696,27 @@ void UpdateLEDandStatusOutuputs(void) {
     // FLASH THE HV ON LED
     if (global_data_A37474.run_time_counter & 0x0010) {
       PIN_LED_HV_ON = OLL_LED_ON;
-      PIN_CPU_HV_ON_STATUS = OLL_STATUS_ACTIVE;
     } else {
       PIN_LED_HV_ON = !OLL_LED_ON;
-      PIN_CPU_HV_ON_STATUS = !OLL_STATUS_ACTIVE;
     }
   } else if (global_data_A37474.control_state >= STATE_HV_ON) {
     PIN_LED_HV_ON = OLL_LED_ON;
-    PIN_CPU_HV_ON_STATUS = OLL_STATUS_ACTIVE;
   } else {
     PIN_LED_HV_ON = !OLL_LED_ON;
-    PIN_CPU_HV_ON_STATUS = !OLL_STATUS_ACTIVE;
   }
   
   // Beam enabled Status
   if (global_data_A37474.control_state == STATE_BEAM_ENABLE) {
     PIN_LED_BEAM_ENABLE = OLL_LED_ON;
-    PIN_CPU_BEAM_ENABLE_STATUS = OLL_STATUS_ACTIVE;
   } else {
     PIN_LED_BEAM_ENABLE = !OLL_LED_ON;
-    PIN_CPU_BEAM_ENABLE_STATUS = !OLL_STATUS_ACTIVE;
     }
   
   // System OK Status
 //  if (global_data_A37474.control_state <= STATE_FAULT_HEATER_ON) {
   if (_FAULT_REGISTER != 0) {
-    PIN_CPU_SYSTEM_OK_STATUS = !OLL_STATUS_ACTIVE;
     PIN_LED_SYSTEM_OK = !OLL_LED_ON;
   } else {
-    PIN_CPU_SYSTEM_OK_STATUS = OLL_STATUS_ACTIVE;
     PIN_LED_SYSTEM_OK = OLL_LED_ON;
   }
 }
@@ -1889,7 +1798,6 @@ void EnableHighVoltage(void) {
   */
   global_data_A37474.analog_output_high_voltage.enabled = 1;
   global_data_A37474.dac_digital_hv_enable = DAC_DIGITAL_ON;
-  PIN_CPU_HV_ENABLE = OLL_PIN_CPU_HV_ENABLE_HV_ENABLED;
 }
 
 void EnableTopSupply(void)  {
@@ -1916,21 +1824,18 @@ void DisableHighVoltage(void) {
   global_data_A37474.dac_digital_hv_enable = DAC_DIGITAL_OFF;
   DACWriteChannel(LTC265X_WRITE_AND_UPDATE_DAC_F, global_data_A37474.dac_digital_top_enable);
   DACWriteChannel(LTC265X_WRITE_AND_UPDATE_DAC_D, global_data_A37474.dac_digital_hv_enable);
-  PIN_CPU_HV_ENABLE = !OLL_PIN_CPU_HV_ENABLE_HV_ENABLED;
 }
 
 
 void EnableBeam(void) {
   global_data_A37474.dac_digital_trigger_enable = DAC_DIGITAL_ON;
   DACWriteChannel(LTC265X_WRITE_AND_UPDATE_DAC_G, global_data_A37474.dac_digital_trigger_enable);
-  PIN_CPU_BEAM_ENABLE = OLL_PIN_CPU_BEAM_ENABLE_BEAM_ENABLED;
 }
 
 
 void DisableBeam(void) {
   global_data_A37474.dac_digital_trigger_enable = DAC_DIGITAL_OFF;
   DACWriteChannel(LTC265X_WRITE_AND_UPDATE_DAC_G, global_data_A37474.dac_digital_trigger_enable);
-  PIN_CPU_BEAM_ENABLE = !OLL_PIN_CPU_BEAM_ENABLE_BEAM_ENABLED;
 }
 
 
@@ -2476,25 +2381,15 @@ void __attribute__((interrupt, no_auto_psv)) _ADCInterrupt(void) {
   
   // Copy Data From Buffer to RAM
   if (_BUFS) {
-    // read ADCBUF 0-7
-    global_data_A37474.pot_ek.adc_accumulator       += ADCBUF0;
-    global_data_A37474.pot_vtop.adc_accumulator     += ADCBUF1;
-    global_data_A37474.pot_htr.adc_accumulator      += ADCBUF2;
-    global_data_A37474.ref_htr.adc_accumulator      += ADCBUF3;
-    global_data_A37474.ref_vtop.adc_accumulator     += ADCBUF4;
-    global_data_A37474.ref_ek.adc_accumulator       += ADCBUF5;
-    global_data_A37474.pos_15v_mon.adc_accumulator  += ADCBUF6;
-    global_data_A37474.neg_15v_mon.adc_accumulator  += ADCBUF7;
+    // read ADCBUF 0-2
+    global_data_A37474.pos_5v_mon.adc_accumulator   += ADCBUF0;
+    global_data_A37474.pos_15v_mon.adc_accumulator  += ADCBUF1;
+    global_data_A37474.neg_15v_mon.adc_accumulator  += ADCBUF2;
   } else {
-    // read ADCBUF 8-15
-    global_data_A37474.pot_ek.adc_accumulator       += ADCBUF8;
-    global_data_A37474.pot_vtop.adc_accumulator     += ADCBUF9;
-    global_data_A37474.pot_htr.adc_accumulator      += ADCBUFA;
-    global_data_A37474.ref_htr.adc_accumulator      += ADCBUFB;
-    global_data_A37474.ref_vtop.adc_accumulator     += ADCBUFC;
-    global_data_A37474.ref_ek.adc_accumulator       += ADCBUFD;
-    global_data_A37474.pos_15v_mon.adc_accumulator  += ADCBUFE;
-    global_data_A37474.neg_15v_mon.adc_accumulator  += ADCBUFF;
+    // read ADCBUF 8-A
+    global_data_A37474.pos_5v_mon.adc_accumulator   += ADCBUF8;
+    global_data_A37474.pos_15v_mon.adc_accumulator  += ADCBUF9;
+    global_data_A37474.neg_15v_mon.adc_accumulator  += ADCBUFA;
   }
   
   global_data_A37474.accumulator_counter += 1;
@@ -2503,44 +2398,28 @@ void __attribute__((interrupt, no_auto_psv)) _ADCInterrupt(void) {
     global_data_A37474.accumulator_counter = 0;    
 
     // average the 128 12 bit samples into a single 16 bit sample
-    global_data_A37474.pot_htr.adc_accumulator      >>= 3;
-    global_data_A37474.pot_vtop.adc_accumulator     >>= 3; 
-    global_data_A37474.pot_ek.adc_accumulator       >>= 3; 
-    global_data_A37474.ref_htr.adc_accumulator      >>= 3; 
-    global_data_A37474.ref_vtop.adc_accumulator     >>= 3; 
-    global_data_A37474.ref_ek.adc_accumulator       >>= 3; 
+    global_data_A37474.pos_5v_mon.adc_accumulator   >>= 3; 
     global_data_A37474.pos_15v_mon.adc_accumulator  >>= 3; 
     global_data_A37474.neg_15v_mon.adc_accumulator  >>= 3; 
 
     // Store the filtred results
-    global_data_A37474.pot_htr.filtered_adc_reading = global_data_A37474.pot_htr.adc_accumulator;
-    global_data_A37474.pot_vtop.filtered_adc_reading = global_data_A37474.pot_vtop.adc_accumulator;
-    global_data_A37474.pot_ek.filtered_adc_reading = global_data_A37474.pot_ek.adc_accumulator;
-    global_data_A37474.ref_htr.filtered_adc_reading = global_data_A37474.ref_htr.adc_accumulator;
-    global_data_A37474.ref_vtop.filtered_adc_reading = global_data_A37474.ref_vtop.adc_accumulator;
-    global_data_A37474.ref_ek.filtered_adc_reading = global_data_A37474.ref_ek.adc_accumulator;
+    global_data_A37474.pos_5v_mon.filtered_adc_reading = global_data_A37474.pos_5v_mon.adc_accumulator;
     global_data_A37474.pos_15v_mon.filtered_adc_reading = global_data_A37474.pos_15v_mon.adc_accumulator;
     global_data_A37474.neg_15v_mon.filtered_adc_reading = global_data_A37474.neg_15v_mon.adc_accumulator;
     
-    // clear the accumulators
-    global_data_A37474.pot_htr.adc_accumulator      = 0;
-    global_data_A37474.pot_vtop.adc_accumulator     = 0; 
-    global_data_A37474.pot_ek.adc_accumulator       = 0; 
-    global_data_A37474.ref_htr.adc_accumulator      = 0; 
-    global_data_A37474.ref_vtop.adc_accumulator     = 0; 
-    global_data_A37474.ref_ek.adc_accumulator       = 0; 
+    // clear the accumulators 
     global_data_A37474.pos_15v_mon.adc_accumulator  = 0; 
     global_data_A37474.neg_15v_mon.adc_accumulator  = 0; 
   }
 }
 
 
-void ETMAnalogClearFaultCounters(AnalogInput* ptr_analog_input) {
-  ptr_analog_input->absolute_under_counter = 0;
-  ptr_analog_input->absolute_over_counter = 0;
-  ptr_analog_input->over_trip_counter = 0;
-  ptr_analog_input->under_trip_counter = 0;
-}
+//void ETMAnalogClearFaultCounters(AnalogInput* ptr_analog_input) {
+//  ptr_analog_input->absolute_under_counter = 0;
+//  ptr_analog_input->absolute_over_counter = 0;
+//  ptr_analog_input->over_trip_counter = 0;
+//  ptr_analog_input->under_trip_counter = 0;
+//}
 
 
 //void ETMCanSpoofPulseSyncNextPulseLevel(void) {
