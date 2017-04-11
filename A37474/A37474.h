@@ -103,7 +103,7 @@
 #define A37474_TRISA_VALUE 0b0101011000000000 
 #define A37474_TRISB_VALUE 0b1110000011111011 
 #define A37474_TRISC_VALUE 0b0000000000000010 
-#define A37474_TRISD_VALUE 0b0001000100010000 
+#define A37474_TRISD_VALUE 0b0001010100010000 
 #define A37474_TRISF_VALUE 0b0000000111001111 
 #define A37474_TRISG_VALUE 0b1100000111001111 
 
@@ -117,7 +117,7 @@ B  1 1 1 0 0 0 0 0 1 1 1 1 1 0 1 1
 
 C  0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 
 
-D  0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 0 
+D  0 0 0 1 0 1 0 1 0 0 0 1 0 0 0 0 
 
 E  0 0 0 0 0 0 0 1 1 1 0 0 1 1 1 1 
 
@@ -136,7 +136,7 @@ F  1 1 0 0 0 0 0 1 1 1 0 0 1 1 1 1
 */
 
 #define ADCON1_SETTING          (ADC_MODULE_OFF & ADC_IDLE_STOP & ADC_FORMAT_INTG & ADC_CLK_AUTO & ADC_AUTO_SAMPLING_ON)
-#define ADCON2_SETTING          (ADC_VREF_EXT_EXT & ADC_SCAN_ON & ADC_SAMPLES_PER_INT_8 & ADC_ALT_BUF_ON & ADC_ALT_INPUT_OFF)
+#define ADCON2_SETTING          (ADC_VREF_AVDD_EXT & ADC_SCAN_ON & ADC_SAMPLES_PER_INT_8 & ADC_ALT_BUF_ON & ADC_ALT_INPUT_OFF)
 #define ADCON3_SETTING          (ADC_SAMPLE_TIME_4 & ADC_CONV_CLK_SYSTEM & ADC_CONV_CLK_9Tcy2)
 #define ADCHS_SETTING           (ADC_CH0_POS_SAMPLEA_AN3 & ADC_CH0_NEG_SAMPLEA_VREFN & ADC_CH0_POS_SAMPLEB_AN3 & ADC_CH0_NEG_SAMPLEB_VREFN)
 #define ADPCFG_SETTING          (ENABLE_AN13_ANA & ENABLE_AN14_ANA & ENABLE_AN15_ANA)
@@ -175,12 +175,12 @@ F  1 1 0 0 0 0 0 1 1 1 0 0 1 1 1 1
 #define PIN_BEAM_ENABLE_SERIAL                       _LATD1
 #define OLL_SERIAL_ENABLE                            1
 
-#define PIN_CPU_15V_SUPPLY_ENABLE                    _LATD10
+#define PIN_CPU_15V_SUPPLY_ENABLE                    _LATD10  //set as input for high impedance to enable
 
-#define OLL_ENABLE                            1
+#define OLL_ENABLE                                   1
 
-#define PIN_CPU_ILOCK_ENABLE                         _LATD2
-#define PIN_CPU_PULSE_ENABLE                         _LATD1
+#define PIN_CPU_ILOCK_ENABLE                         _LATD5
+#define PIN_CPU_PULSE_ENABLE                         _LATD6
 
 #define OLL_PIN_CPU_PULSE_ENABLE_PULSE_ENABLED       1
     // OLL_PIN_CPU_HV_ENABLE_HV_ENABLED defined in A37474_CONFIG.h file
@@ -314,6 +314,7 @@ typedef struct {
   unsigned int heater_voltage_target;           // This is the targeted heater voltage set point
   unsigned int fault_holdoff_state;             // This is whether to hold off current limit fault during htr warmup period
   unsigned int fault_holdoff_count;             // This is a counter for the current limit fault holdoff
+  unsigned int mux_fault;
   
   volatile unsigned char control_config;        // This indicates when all set values from the CAN interface have been received
 
@@ -456,7 +457,8 @@ extern TYPE_GLOBAL_DATA_A37474 global_data_A37474;
 #define _FPGA_ARC_HIGH_VOLTAGE_INHIBIT_ACTIVE          _WARNING_7
 //#define _FPGA_MODULE_TEMP_GREATER_THAN_65_C            _WARNING_8
 #define _FPGA_MODULE_TEMP_GREATER_THAN_75_C            _WARNING_8
-//#define _FPGA_CURRENT_MONITOR_PULSE_WIDTH_FAULT        _WARNING_9
+//#define _FPGA_CURRENT_MONITOR_PULSE_WIDTH_FAULT        _WARNING_
+#define _STATUS_MUX_CONFIG_FAILURE                      _WARNING_9
 #define _FPGA_GRID_MODULE_HARDWARE_FAULT               _WARNING_B
 #define _FPGA_GRID_MODULE_OVER_VOLTAGE_FAULT           _WARNING_B
 #define _FPGA_GRID_MODULE_UNDER_VOLTAGE_FAULT          _WARNING_B
@@ -465,7 +467,7 @@ extern TYPE_GLOBAL_DATA_A37474 global_data_A37474;
 #define _FPGA_DIPSWITCH_1_ON                           _WARNING_D
 #define _FPGA_TEST_MODE_TOGGLE_SWITCH_TEST_MODE        _WARNING_E
 #define _FPGA_LOCAL_MODE_TOGGLE_SWITCH_LOCAL_MODE      _WARNING_F
-//#define _FPGA_HEATER_VOLTAGE_LESS_THAN_4_5_VOLTS       _WARNING_9
+
 
 
 #define ETM_CAN_REGISTER_GUN_DRIVER_RESET_FPGA        0x8202

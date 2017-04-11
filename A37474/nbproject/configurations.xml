@@ -44,8 +44,8 @@
       <compileType>
         <linkerTool>
           <linkerLibItems>
-            <linkerLibFileItem>../../ETM_LIBRARY/Version_03/lib/ETM_CORE_30F6014A.a</linkerLibFileItem>
             <linkerLibFileItem>../../ETM_LIBRARY/Version_03/lib/ETM_LINAC_CAN_30F6014A.a</linkerLibFileItem>
+            <linkerLibFileItem>../../ETM_LIBRARY/Version_03/lib/ETM_CORE_30F6014A.a</linkerLibFileItem>
           </linkerLibItems>
         </linkerTool>
         <archiverTool>

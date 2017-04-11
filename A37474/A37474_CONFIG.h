@@ -8,7 +8,9 @@
 //#define __A36772_700
 //#define __A36772_100
 //#define __A36772_200
-#define __A36772_300
+
+
+#define __A37474_000
 
 
 
@@ -18,7 +20,7 @@
 #ifndef __A36772_700
 #ifndef __A36772_100
 #ifndef __A36772_200
-#ifndef __A36772_300
+#ifndef __A37474_000
 #error "No Specific Board Selected"
 #endif
 #endif
@@ -58,7 +60,7 @@
 #ifdef  __A36772_200
 #error "Multiple boards selected"
 #endif
-#ifdef  __A36772_300
+#ifdef  __A37474_000
 #error "Multiple boards selected"
 #endif
 #ifdef  __A36772_700
@@ -94,7 +96,7 @@
 #ifdef  __A36772_200
 #error "Multiple boards selected"
 #endif
-#ifdef  __A36772_300
+#ifdef  __A37474_000
 #error "Multiple boards selected"
 #endif
 #ifdef  __A36772_700
@@ -127,7 +129,7 @@
 #ifdef  __A36772_200
 #error "Multiple boards selected"
 #endif
-#ifdef  __A36772_300
+#ifdef  __A37474_000
 #error "Multiple boards selected"
 #endif
 #ifdef  __A36772_700
@@ -157,7 +159,7 @@
 #define BIAS_OVER_VOLTAGE                       18000        // -180V
 #define BIAS_UNDER_VOLTAGE                      14000        // -140V
 #define BOARD_DASH_NUMBER                       200
-#ifdef  __A36772_300
+#ifdef  __A37474_000
 #error "Multiple boards selected"
 #endif
 #ifdef  __A36772_700
@@ -165,17 +167,10 @@
 #endif
 #endif
 
-#ifdef __A36772_300
+#ifdef __A37474_000
 #define __MODE_MODBUS_INTERFACE
 #define __OPTION_ENABLE_CAN
 #define OLL_PIN_CPU_HV_ENABLE_HV_ENABLED        1
-#define REF_VTOP_SCALE_SELECTED                 .62500       // 1V = 50V Eg
-#define REF_VTOP_OFFSET_SELECTED                0
-#define REF_EK_SCALE_SELECTED                   .33784       // 0.37V = -1kV Ek
-#define DAC_MON_HTR_CURRENT_SCALE_SELECTED      10.6667      // 1V = 500mA If
-#define DAC_MON_EK_VOLTAGE_SCALE_SELECTED       1.9733       // 0.37V = -1kV Ek
-#define DAC_MON_TOP_VOLTAGE_SCALE_SELECTED      1.0667       // 1V = 50V Eg
-#define DAC_MON_TOP_VOLTAGE_OFFSET_SELECTED     0
 #define HEATER_RAMP_TIME                        30000
 #define MAX_PROGRAM_HTR_VOLTAGE                 8000         // 8.0 V
 #define MAX_RAMP_HTR_I                          2850         // 2.850 Amps
@@ -186,7 +181,7 @@
 #define TOP_MIN_SET_BOARD_SPEC                  0            // -80V
 #define BIAS_OVER_VOLTAGE                       18000        // -180V
 #define BIAS_UNDER_VOLTAGE                      14000        // -140V
-#define BOARD_DASH_NUMBER                       300
+#define BOARD_DASH_NUMBER                       000
 #ifdef  __A36772_700
 #error "Multiple boards selected"
 #endif
@@ -276,18 +271,13 @@
     The descrete digital/analog is not used.
     R126 and R127 should be installed
 
-  __MODE_POT_INTERFACE
-    In this mode, the gun driver is controlled by discrete fiber or signal lines.
-    The pulse top, high voltage, and heater references are generated from the on board pots
-    R126 and R127 should not be installed 
-
   __MODE_DISCRETE_INTERFACE
     In this mode, the gun driver is controlled by discrete fiber or signal lines.
     The pulse top, high voltage, and heater references are generated from the external interface
     R126 and R127 should not be installed 
 
   __OPTION_ENABLE_CAN
-    This is only valid for __MODE_POT_INTERFACE and __MODE_DISCRETE_INTERFACE
+    This is only valid for __MODE_DISCRETE_INTERFACE
     This allows the CAN port to be used for test and debugging while operating in one of these modes
 
  */
@@ -295,11 +285,9 @@
 
 // Make sure that at least one mode is selected
 #ifndef __MODE_CAN_INTERFACE
-#ifndef __MODE_POT_INTERFACE
 #ifndef __MODE_DISCRETE_INTERFACE
 #ifndef __MODE_MODBUS_INTERFACE
 #error "No reference Source Selected"
-#endif
 #endif
 #endif
 #endif
@@ -317,7 +305,6 @@
 
 
 #ifdef __MODE_DISCRETE_INTERFACE
-#define __DISCRETE_REFERENCE
 #define __DISCRETE_CONTROLS
 #ifdef  __CAN_REFERENCE
 #error "Multiple references selected"
@@ -327,16 +314,6 @@
 #endif
 #endif
 
-#ifdef __MODE_POT_INTERFACE
-#define __POT_REFERENCE
-#define __DISCRETE_CONTROLS
-#ifdef  __CAN_REFERENCE
-#error "Multiple references selected"
-#endif
-#ifdef  __DISCRETE_REFERENCE
-#error "Multiple references selected"
-#endif
-#endif
 
 #ifdef __MODE_MODBUS_INTERFACE
 #define __MODBUS_REFERENCE
@@ -391,7 +368,7 @@
 #define LED_STARTUP_FLASH_TIME                500      // Time LEDs will flash at startup
 #define MAX_HEATER_RAMP_UP_TIME               HEATER_RAMP_TIME    // If the heater does not reach it's programed voltage in this time a fault will be generated
 #define HEATER_AUTO_RESTART_TIME              500      // Time delay between a heater fault and when the heater gets restarted
-#define HEATER_RAMP_UP_TIME_PERIOD            5        // Durring heater ramp up, the heater voltage will be increased every N 10ms (see HEATER_RAMP_UP_INCREMENT)
+#define HEATER_RAMP_UP_TIME_PERIOD            5        // During heater ramp up, the heater voltage will be increased every N 10ms (see HEATER_RAMP_UP_INCREMENT)
 #define GUN_DRIVER_POWER_SUPPLY_STARTUP_TIME  100      // Wait this long between enabling High Voltage / Pulse Top / Bias and cheching that they are at correct values
 
 // System control Parameters
@@ -502,38 +479,15 @@
 
 
 // ------------- A37474 Internal PIC ADC Input Settings --------------------- //
-#define POT_HTR_FIXED_SCALE                   .15625
-#define POT_HTR_FIXED_OFFSET                  0
+#define POS_5V_FIXED_SCALE                    .15259                            // 1mV per lsb
+#define POS_5V_FIXED_OFFSET                   0
+ 
+#define POS_15V_FIXED_SCALE                   .32328
+#define POS_15V_FIXED_OFFSET                  0
 
-#define POT_VTOP_FIXED_SCALE                  .78125
-#define POT_VTOP_FIXED_OFFSET                 0
+#define NEG_15V_FIXED_SCALE                   .32328                           // Change this
+#define NEG_15V_FIXED_OFFSET                  0
 
-#define POT_EK_FIXED_SCALE                    .42230
-#define POT_EK_FIXED_OFFSET                   0
-
-#define REF_HTR_FIXED_SCALE                   .15625                            // 1V = -1V Ef
-#define REF_HTR_FIXED_OFFSET                  0
-
-#define REF_VTOP_FIXED_SCALE                  REF_VTOP_SCALE_SELECTED
-#define REF_VTOP_FIXED_OFFSET                 REF_VTOP_OFFSET_SELECTED
-
-#define REF_EK_FIXED_SCALE                    REF_EK_SCALE_SELECTED
-#define REF_EK_FIXED_OFFSET                   0
-
-
-
-// ------------- A37474 Onboard DAC Output Settings --------------------- //
-#define DAC_MONITOR_HEATER_VOLTAGE_FIXED_SCALE    5.3333                        // 1V = -1V Ef
-#define DAC_MONITOR_HEATER_VOLTAGE_FIXED_OFFSET   0
-
-#define DAC_MONITOR_HEATER_CURRENT_FIXED_SCALE    DAC_MON_HTR_CURRENT_SCALE_SELECTED
-#define DAC_MONITOR_HEATER_CURRENT_FIXED_OFFSET   0
-
-#define DAC_MONITOR_CATHODE_VOLTAGE_FIXED_SCALE   DAC_MON_EK_VOLTAGE_SCALE_SELECTED
-#define DAC_MONITOR_CATHODE_VOLTAGE_FIXED_OFFSET  0
-
-#define DAC_MONITOR_GRID_VOLTAGE_FIXED_SCALE      DAC_MON_TOP_VOLTAGE_SCALE_SELECTED
-#define DAC_MONITOR_GRID_VOLTAGE_FIXED_OFFSET     DAC_MON_TOP_VOLTAGE_OFFSET_SELECTED
 
 
 #endif

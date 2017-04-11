@@ -56,9 +56,8 @@ typedef struct {
 
 
    #define MCP23008_DEFAULT_IOCON         0b00000000        // Default IOCON settings
-   #define MCP23008_U12_IODIR_VALUE       0b11111000        // Port A.0 -> A.2 are Outputs, A.3-A.7 are inputs
-   #define MCP23008_U12_LAT_INITIAL       0xFF              // Outputs on Port A all start High (LED/OPTO NO LIGHTS)
-   #define MCP23008_U12_IPOL_VALUE        0x00              // Do Not Invert the inputs on Port A
+   #define MCP23008_U12_IODIR_VALUE       0b00000000        // All gpio are Outputs
+   #define MCP23008_U12_IPOL_VALUE        0x00              // Do Not Invert the inputs on Port
 
 /*
 
