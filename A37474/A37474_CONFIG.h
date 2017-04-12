@@ -173,11 +173,11 @@
 #define OLL_PIN_CPU_HV_ENABLE_HV_ENABLED        1
 #define HEATER_RAMP_TIME                        30000
 #define MAX_PROGRAM_HTR_VOLTAGE                 8000         // 8.0 V
-#define MAX_RAMP_HTR_I                          2850         // 2.850 Amps
-#define HTR_OC_ABS                              3000         // 3.000 Amps
+#define MAX_RAMP_HTR_I                          1650         // 1.650 Amps
+#define HTR_OC_ABS                              1750         // 1.750 Amps
 #define HV_MAX_SET_BOARD_SPEC                   20000        // -20KV
 #define HV_MIN_SET_BOARD_SPEC                   5000         // -5KV
-#define TOP_MAX_SET_BOARD_SPEC                  28000        // 200V
+#define TOP_MAX_SET_BOARD_SPEC                  40000        // 320V
 #define TOP_MIN_SET_BOARD_SPEC                  0            // -80V
 #define BIAS_OVER_VOLTAGE                       18000        // -180V
 #define BIAS_UNDER_VOLTAGE                      14000        // -140V
