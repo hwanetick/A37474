@@ -366,17 +366,21 @@
 
 // ----------- Timers configurations - ALL Times are in 10ms Units --------------------
 #define LED_STARTUP_FLASH_TIME                500      // Time LEDs will flash at startup
-#define MAX_HEATER_RAMP_UP_TIME               HEATER_RAMP_TIME    // If the heater does not reach it's programed voltage in this time a fault will be generated
+#define MAX_HEATER_RAMP_UP_TIME               21000    // (3.5min) If the heater does not reach it's programed voltage in this time a fault will be generated
 #define HEATER_AUTO_RESTART_TIME              500      // Time delay between a heater fault and when the heater gets restarted
-#define HEATER_RAMP_UP_TIME_PERIOD            5        // During heater ramp up, the heater voltage will be increased every N 10ms (see HEATER_RAMP_UP_INCREMENT)
+#define HEATER_RAMP_UP_TIME_PERIOD            30       // (300ms) During heater ramp up, the heater voltage will be increased every N 10ms (see HEATER_RAMP_UP_INCREMENT)
 #define GUN_DRIVER_POWER_SUPPLY_STARTUP_TIME  100      // Wait this long between enabling High Voltage / Pulse Top / Bias and cheching that they are at correct values
+
+#define HEATER_REGULATION_TIME_PERIOD         5        // (50ms) This is the period that the regulation of the heater voltage takes between increments
 
 // System control Parameters
 #define MAX_HEATER_CURRENT_DURING_RAMP_UP     MAX_RAMP_HTR_I    //1650     // mA Units.  Whenever the heater voltage is increased (ramp-up or increasing the set point).  The voltage will be current limited by this current
 #define MAX_CONVERTER_LOGIC_ADC_READ_ERRORS   20       // If the ADC read exceeds this number a fault will be created
 #define MAX_HEATER_START_UP_ATTEMPTS          5        // If the heater ramp up process does not succeed in this many attempts, a fault will be generated that requires power cycle
 #define MAX_DAC_TX_ATTEMPTS                   10       // The pic will attempt to write to the Converter Logic DAC this many times before giving up
-#define HEATER_RAMP_UP_INCREMENT              50       // mV Units.  When ramping up the heater voltage it is increased by this amount each HEATER_RAMP_UP_TIME_PERIOD
+#define HEATER_RAMP_UP_INCREMENT              10       // mV Units.  When ramping up the heater voltage it is increased by this amount each HEATER_RAMP_UP_TIME_PERIOD
+
+#define HEATER_REGULATION_INCREMENT           50       // (50mV) This is the regulation increment for the heater voltage
 
 
 

@@ -153,8 +153,10 @@ F  1 1 0 0 0 0 0 1 1 1 0 0 1 1 1 1
 #define ILL_PIN_CUSTOMER_BEAM_ENABLE_BEAM_ENABLED    1
 
 #define PIN_GRID_PULSE_INTERRUPT                     _RA12
-#define PIN_INTERLOCK_RELAY_CLOSED                   _RD4
+#define PIN_INTERLOCK_RELAY_STATUS                   _RD4
 #define PIN_GRID_PULSE_INPUT_CAPTURE                 _RD12
+
+#define ILL_PIN_INTERLOCK_RELAY_STATUS_CLOSED            1
 
 //------------------- GUN Driver Interface I/O ------------------------- //
 #define PIN_CS_DAC                                   _LATD13
@@ -296,6 +298,7 @@ F  1 1 0 0 0 0 0 1 1 1 0 0 1 1 1 1
 typedef struct {
   //unsigned int watchdog_count_error;          // 
   unsigned int control_state;                   // This stores the state of the state machine
+  unsigned int request_heater_enable;           // This indicates that heater_enable has been requested (either from CAN module or from discrete inputs depending upon configuration)
   unsigned int request_hv_enable;               // This indicates that hv_enable has been requested (either from CAN module or from discrete inputs depending upon configuration)
   unsigned int request_beam_enable;             // This indicates that beam_enable has been requested (either from CAN module or from discrete inputs depending upon configuration)
   unsigned int reset_active;                    // This indicates that reset has been requested (either from CAN module or from discrete inputs depending upon configuration)
@@ -404,6 +407,8 @@ typedef struct {
   TYPE_DIGITAL_INPUT adc_digital_grid_flt;
   AnalogInput  input_dac_monitor;
 
+  TYPE_DIGITAL_INPUT interlock_relay_closed;
+  
   // These are the anlog input from the PICs internal DAC
 
   AnalogInput  pos_5v_mon;  // an13
@@ -449,7 +454,7 @@ extern TYPE_GLOBAL_DATA_A37474 global_data_A37474;
 #define _STATUS_CUSTOMER_BEAM_ENABLE                   _WARNING_1
 #define _STATUS_ADC_DIGITAL_HEATER_NOT_READY           _WARNING_2
 #define _STATUS_DAC_WRITE_FAILURE                      _WARNING_3
-//#define _STATUS_INTERLOCK_INHIBITING_HV                _WARNING_4
+#define _STATUS_INTERLOCK_INHIBITING_HV                _WARNING_4
 //#define _STATUS_HEATER_AT_OPERATING_CURRENT            _WARNING_5
 //#define _FPGA_CUSTOMER_HARDWARE_REV_MISMATCH           _WARNING_6
 #define _FPGA_FIRMWARE_MINOR_REV_MISMATCH              _WARNING_6
@@ -479,15 +484,16 @@ extern TYPE_GLOBAL_DATA_A37474 global_data_A37474;
 #define STATE_START_UP                       30
 #define STATE_WAIT_FOR_CONFIG                40
 #define STATE_RESET_FPGA                     50
-#define STATE_HEATER_RAMP_UP                 60
-#define STATE_HEATER_WARM_UP                 70
-#define STATE_FAULT_HEATER_ON                80
-#define STATE_HEATER_WARM_UP_DONE            90
-#define STATE_POWER_SUPPLY_RAMP_UP           100
-#define STATE_HV_ON                          110
-#define STATE_TOP_ON                         120
-#define STATE_TOP_READY                      130
-#define STATE_BEAM_ENABLE                    140
+#define STATE_HEATER_DISABLED                60
+#define STATE_HEATER_RAMP_UP                 70
+#define STATE_HEATER_WARM_UP                 80
+#define STATE_FAULT_HEATER_ON                90
+#define STATE_HEATER_WARM_UP_DONE            100
+#define STATE_POWER_SUPPLY_RAMP_UP           110
+#define STATE_HV_ON                          120
+#define STATE_TOP_ON                         130
+#define STATE_TOP_READY                      140
+#define STATE_BEAM_ENABLE                    150
 
 
 #define STATE_MESSAGE_FAULT_HEATER_OFF         0x0101

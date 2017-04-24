@@ -132,8 +132,8 @@ unsigned char SPICharInverted(unsigned char transmit_byte);
 
 
 // Digital Input Functions (NEEDS and ETM Module)
-void ETMDigitalInitializeInput(TYPE_DIGITAL_INPUT* input, unsigned int initial_value, unsigned int filter_time);
-void ETMDigitalUpdateInput(TYPE_DIGITAL_INPUT* input, unsigned int current_value);
+//void ETMDigitalInitializeInput(TYPE_DIGITAL_INPUT* input, unsigned int initial_value, unsigned int filter_time);
+//void ETMDigitalUpdateInput(TYPE_DIGITAL_INPUT* input, unsigned int current_value);
 
 
 
@@ -189,7 +189,24 @@ void DoStateMachine(void) {
   case STATE_RESET_FPGA:
     ResetFPGA();
     ResetAllFaultInfo();
-    global_data_A37474.control_state = STATE_HEATER_RAMP_UP;
+    global_data_A37474.control_state = STATE_HEATER_DISABLED;
+    break;
+    
+    
+  case STATE_HEATER_DISABLED:
+    DisableHeater();
+    global_data_A37474.watchdog_counter = 0;
+    global_data_A37474.analog_output_heater_voltage.set_point = 0;
+    global_data_A37474.heater_start_up_attempts = 0;
+    while (global_data_A37474.control_state == STATE_HEATER_DISABLED) {
+      DoA37474();
+      if (global_data_A37474.request_heater_enable) {
+        global_data_A37474.control_state = STATE_HEATER_RAMP_UP;
+      }
+      if (CheckHeaterFault()) {
+        global_data_A37474.control_state = STATE_FAULT_WARMUP_HEATER_OFF;
+      }
+    }    
     break;
 
 
@@ -197,6 +214,7 @@ void DoStateMachine(void) {
     _CONTROL_NOT_READY = 1;
     global_data_A37474.watchdog_counter = 0;
     global_data_A37474.analog_output_heater_voltage.set_point = 0;
+    global_data_A37474.heater_ramp_interval = 0;
     global_data_A37474.heater_start_up_attempts++;
     global_data_A37474.heater_ramp_up_time = MAX_HEATER_RAMP_UP_TIME;
     DisableBeam();
@@ -207,6 +225,9 @@ void DoStateMachine(void) {
       DoA37474();
       if (global_data_A37474.analog_output_heater_voltage.set_point >= global_data_A37474.heater_voltage_target) {
         global_data_A37474.control_state = STATE_HEATER_WARM_UP;
+      }
+      if (!global_data_A37474.request_heater_enable) {
+        global_data_A37474.control_state = STATE_HEATER_DISABLED;
       }
       if (CheckHeaterFault()) {
         global_data_A37474.control_state = STATE_FAULT_WARMUP_HEATER_OFF;
@@ -221,6 +242,7 @@ void DoStateMachine(void) {
     DisableHighVoltage();
     global_data_A37474.current_state_msg = STATE_MESSAGE_HEATER_WARM_UP;
     global_data_A37474.heater_ramp_up_time = 0;
+    global_data_A37474.heater_ramp_interval = 0;
     global_data_A37474.heater_warm_up_time_remaining = HEATER_WARM_UP_TIME;
     _T3IF = 0;   //set timer
     global_data_A37474.fault_holdoff_count = 0;
@@ -236,6 +258,9 @@ void DoStateMachine(void) {
       }
       if (global_data_A37474.heater_warm_up_time_remaining == 0) {
         global_data_A37474.control_state = STATE_HEATER_WARM_UP_DONE;
+      }
+      if (!global_data_A37474.request_heater_enable) {
+        global_data_A37474.control_state = STATE_HEATER_DISABLED;
       }
       if (CheckHeaterFault()) {
         global_data_A37474.control_state = STATE_FAULT_WARMUP_HEATER_OFF;
@@ -254,6 +279,9 @@ void DoStateMachine(void) {
       DoA37474();
       if (global_data_A37474.request_hv_enable) {
         global_data_A37474.control_state = STATE_POWER_SUPPLY_RAMP_UP;
+      }
+      if (!global_data_A37474.request_heater_enable) {
+        global_data_A37474.control_state = STATE_HEATER_DISABLED;
       }
       if (CheckHeaterFault()) {
         global_data_A37474.control_state = STATE_FAULT_WARMUP_HEATER_OFF;
@@ -386,6 +414,9 @@ void DoStateMachine(void) {
       DoA37474();
       if (global_data_A37474.reset_active) {
 	    global_data_A37474.control_state = STATE_HEATER_WARM_UP_DONE;
+      }
+      if (!global_data_A37474.request_heater_enable) {
+        global_data_A37474.control_state = STATE_HEATER_DISABLED;
       }
       if (CheckHeaterFault()) {
         global_data_A37474.control_state = STATE_FAULT_HEATER_OFF;
@@ -882,6 +913,10 @@ void ResetAllFaultInfo(void) {
   ETMDigitalInitializeInput(&global_data_A37474.adc_digital_pulse_width_duty_flt           , 1, 30);
   ETMDigitalInitializeInput(&global_data_A37474.adc_digital_grid_flt                       , 1, 30);
 
+ 
+  ETMDigitalInitializeInput(&global_data_A37474.interlock_relay_closed                     , 0, 4);
+ 
+  
   // Reset all the Analog input fault counters
   ETMAnalogClearFaultCounters(&global_data_A37474.input_adc_temperature);
   ETMAnalogClearFaultCounters(&global_data_A37474.input_hv_v_mon);
@@ -938,6 +973,7 @@ unsigned int CheckFault(void) {
   fault |= _FAULT_ADC_BIAS_V_MON_OVER_ABSOLUTE;
   fault |= _FAULT_ADC_BIAS_V_MON_UNDER_ABSOLUTE;
   fault |= _FAULT_ADC_DIGITAL_ARC;
+  fault |= _STATUS_INTERLOCK_INHIBITING_HV;
   if (fault) {
     return 1;
   } else {
@@ -950,6 +986,7 @@ unsigned int CheckPreTopFault(void) {
   fault  = _FAULT_ADC_HV_V_MON_OVER_RELATIVE;
   fault |= _FAULT_ADC_HV_V_MON_UNDER_RELATIVE;
   fault |= _FAULT_ADC_DIGITAL_ARC;
+  fault |= _STATUS_INTERLOCK_INHIBITING_HV;
   if (fault) {
     return 1;
   } else {
@@ -963,6 +1000,7 @@ unsigned int CheckPreHVFault(void) {
   unsigned int fault = 0;
   fault  = _FAULT_ADC_HV_V_MON_OVER_RELATIVE;
   fault |= _FAULT_ADC_DIGITAL_ARC;
+  fault |= _STATUS_INTERLOCK_INHIBITING_HV;
   if (fault) {
     return 1;
   } else {
@@ -985,8 +1023,16 @@ void DoA37474(void) {
   ETMModbusSlaveDoModbus();
 #endif
 
-
+  ETMDigitalUpdateInput(&global_data_A37474.interlock_relay_closed, PIN_INTERLOCK_RELAY_STATUS);
+  
 #ifdef __MODBUS_CONTROLS
+
+  if (modbus_slave_bit_0x01) {
+    global_data_A37474.request_heater_enable = 1;
+  } else {
+    global_data_A37474.request_heater_enable = 0;
+  }
+  
   if (modbus_slave_bit_0x02) {
     PIN_HV_ON_SERIAL = OLL_SERIAL_ENABLE;
   } else {
@@ -1030,21 +1076,17 @@ void DoA37474(void) {
     if (PIN_CUSTOMER_HV_ON == ILL_PIN_CUSTOMER_HV_ON_ENABLE_HV) {
       global_data_A37474.request_hv_enable = 1;
       _STATUS_CUSTOMER_HV_ON = 1;
-      PIN_CPU_ILOCK_ENABLE = OLL_ENABLE;
     } else {
       global_data_A37474.request_hv_enable = 0;
       _STATUS_CUSTOMER_HV_ON = 0;
-      PIN_CPU_ILOCK_ENABLE = !OLL_ENABLE;
     }
 
     if (PIN_CUSTOMER_BEAM_ENABLE == ILL_PIN_CUSTOMER_BEAM_ENABLE_BEAM_ENABLED) {
       global_data_A37474.request_beam_enable = 1;
       _STATUS_CUSTOMER_BEAM_ENABLE = 1;
-      PIN_CPU_PULSE_ENABLE = OLL_ENABLE;
     } else {
       global_data_A37474.request_beam_enable = 0;
       _STATUS_CUSTOMER_BEAM_ENABLE = 0;
-      PIN_CPU_PULSE_ENABLE = !OLL_ENABLE;
     }
     
     SetStateMessage (global_data_A37474.current_state_msg);
@@ -1298,24 +1340,34 @@ void DoA37474(void) {
     }
     
     // Ramp the heater voltage
-    if ((global_data_A37474.control_state == STATE_HEATER_RAMP_UP)||(global_data_A37474.fault_holdoff_state == FAULT_HOLDOFF_STATE)) {
+    if (global_data_A37474.fault_holdoff_state == FAULT_HOLDOFF_STATE) {
       global_data_A37474.heater_voltage_current_limited = 0;
     }
-    global_data_A37474.heater_ramp_interval++;
-    if (global_data_A37474.heater_ramp_interval >= HEATER_RAMP_UP_TIME_PERIOD) {
-      global_data_A37474.heater_ramp_interval = 0;
-      if (global_data_A37474.input_htr_i_mon.reading_scaled_and_calibrated < MAX_HEATER_CURRENT_DURING_RAMP_UP) {
-        global_data_A37474.analog_output_heater_voltage.set_point += HEATER_RAMP_UP_INCREMENT;
-        if (global_data_A37474.heater_voltage_current_limited) {
-          global_data_A37474.heater_voltage_current_limited--;
-        }
-      } else {
-        global_data_A37474.heater_voltage_current_limited++;
-        if (global_data_A37474.heater_voltage_current_limited > HEATER_VOLTAGE_CURRENT_LIMITED_FAULT_TIME) {
-          global_data_A37474.heater_voltage_current_limited = HEATER_VOLTAGE_CURRENT_LIMITED_FAULT_TIME;
+    
+    if (global_data_A37474.control_state == STATE_HEATER_RAMP_UP) {
+      global_data_A37474.heater_ramp_interval++;
+      if (global_data_A37474.heater_ramp_interval >= HEATER_RAMP_UP_TIME_PERIOD) {
+        global_data_A37474.analog_output_heater_voltage.set_point += HEATER_RAMP_UP_INCREMENT;  
+      }  
+        
+    } else if (global_data_A37474.control_state > STATE_HEATER_RAMP_UP) {
+      global_data_A37474.heater_ramp_interval++;
+      if (global_data_A37474.heater_ramp_interval >= HEATER_REGULATION_TIME_PERIOD) {
+        global_data_A37474.heater_ramp_interval = 0;
+        if (global_data_A37474.input_htr_i_mon.reading_scaled_and_calibrated < MAX_HEATER_CURRENT_DURING_RAMP_UP) {
+          global_data_A37474.analog_output_heater_voltage.set_point += HEATER_REGULATION_INCREMENT;
+          if (global_data_A37474.heater_voltage_current_limited) {
+            global_data_A37474.heater_voltage_current_limited--;
+          }
+        } else {
+          global_data_A37474.heater_voltage_current_limited++;
+          if (global_data_A37474.heater_voltage_current_limited > HEATER_VOLTAGE_CURRENT_LIMITED_FAULT_TIME) {
+            global_data_A37474.heater_voltage_current_limited = HEATER_VOLTAGE_CURRENT_LIMITED_FAULT_TIME;
+          }
         }
       }
     }
+    
     if (global_data_A37474.analog_output_heater_voltage.set_point > global_data_A37474.heater_voltage_target) {
       global_data_A37474.analog_output_heater_voltage.set_point = global_data_A37474.heater_voltage_target;
     }
@@ -1436,6 +1488,7 @@ void UpdateFaults(void) {
   if (global_data_A37474.mux_fault > 5) {
     _STATUS_MUX_CONFIG_FAILURE = 1;
   }
+  
    
   if (global_data_A37474.heater_voltage_current_limited >= HEATER_VOLTAGE_CURRENT_LIMITED_FAULT_TIME) {
     _FAULT_HEATER_VOLTAGE_CURRENT_LIMITED = 1;
@@ -1528,6 +1581,15 @@ void UpdateFaults(void) {
     } else if (global_data_A37474.reset_active) {
       _FAULT_ADC_HV_V_MON_OVER_RELATIVE = 0;
     }
+    
+    if (global_data_A37474.control_state >= STATE_POWER_SUPPLY_RAMP_UP) {
+      if (global_data_A37474.interlock_relay_closed.filtered_reading == 0) {
+        _STATUS_INTERLOCK_INHIBITING_HV = 1;
+      }
+    } else if (global_data_A37474.reset_active) {
+      _STATUS_INTERLOCK_INHIBITING_HV = 0;
+    }
+    
 
     // Only check for HV undervoltage after HV is enabled
     if (global_data_A37474.control_state >= STATE_HV_ON) {
@@ -1712,6 +1774,7 @@ void EnableHighVoltage(void) {
   */
   global_data_A37474.analog_output_high_voltage.enabled = 1;
   global_data_A37474.dac_digital_hv_enable = DAC_DIGITAL_ON;
+  PIN_CPU_ILOCK_ENABLE = OLL_ENABLE;
 }
 
 void EnableTopSupply(void)  {
@@ -1738,18 +1801,21 @@ void DisableHighVoltage(void) {
   global_data_A37474.dac_digital_hv_enable = DAC_DIGITAL_OFF;
   DACWriteChannel(LTC265X_WRITE_AND_UPDATE_DAC_F, global_data_A37474.dac_digital_top_enable);
   DACWriteChannel(LTC265X_WRITE_AND_UPDATE_DAC_D, global_data_A37474.dac_digital_hv_enable);
+  PIN_CPU_ILOCK_ENABLE = !OLL_ENABLE;
 }
 
 
 void EnableBeam(void) {
   global_data_A37474.dac_digital_trigger_enable = DAC_DIGITAL_ON;
   DACWriteChannel(LTC265X_WRITE_AND_UPDATE_DAC_G, global_data_A37474.dac_digital_trigger_enable);
+  PIN_CPU_PULSE_ENABLE = OLL_ENABLE;
 }
 
 
 void DisableBeam(void) {
   global_data_A37474.dac_digital_trigger_enable = DAC_DIGITAL_OFF;
   DACWriteChannel(LTC265X_WRITE_AND_UPDATE_DAC_G, global_data_A37474.dac_digital_trigger_enable);
+  PIN_CPU_PULSE_ENABLE = !OLL_ENABLE;
 }
 
 
@@ -2479,6 +2545,7 @@ void ETMModbusInit(void) {
   }
   
   //Initialize control bits as disabled
+  modbus_slave_bit_0x01 = 0;
   modbus_slave_bit_0x02 = 0;
   modbus_slave_bit_0x03 = 0;
   modbus_slave_bit_0x04 = 0;
