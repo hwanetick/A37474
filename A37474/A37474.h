@@ -168,6 +168,9 @@ F  1 1 0 0 0 0 0 1 1 1 0 0 1 1 1 1
 #define PIN_CS_FPGA                                  _LATD15
 #define OLL_PIN_CS_FPGA_SELECTED                     1
 
+#define CS_LATCH_REGISTER                            LATD
+#define OLL_CS_PINS_SELECTED                         0xE0
+
 
 
 // Digital Outputs
@@ -439,13 +442,13 @@ extern TYPE_GLOBAL_DATA_A37474 global_data_A37474;
 #define _FAULT_ADC_TOP_V_MON_UNDER_RELATIVE            _FAULT_5 // CHECKED_DP
 #define _FAULT_ADC_BIAS_V_MON_OVER_ABSOLUTE            _FAULT_6 // CHECKED_DP 
 #define _FAULT_ADC_BIAS_V_MON_UNDER_ABSOLUTE           _FAULT_6 // CHECKED_DP
-#define _FAULT_CAN_COMMUNICATION                       _FAULT_7 // CHECKED_DP// Heater Fault
+//#define _FAULT_CAN_COMMUNICATION                       _FAULT_7 // CHECKED_DP// Heater Fault
 #define _FAULT_SPI_COMMUNICATION                       _FAULT_8
 #define _FAULT_ADC_DIGITAL_ARC                         _FAULT_9  // CHECKED_DP// This requires HV OFF
 #define _FAULT_ADC_DIGITAL_OVER_TEMP                   _FAULT_A  // CHECKED_DP// This requires a FPGA Reset (Goto Heater Off State)
 //#define _FAULT_CONVERTER_LOGIC_ADC_READ_FAILURE        _FAULT_B // CHECKED_DP// Heater Fault
 #define _FAULT_ADC_DIGITAL_GRID                        _FAULT_C  // CHECKED_DP// This requires a FPGA Reset (Goto Heater Off State)
-#define _FAULT_HEATER_VOLTAGE_CURRENT_LIMITED          _FAULT_D  // CHECKED_DP// Heater Fault
+#define _FAULT_HEATER_VOLTAGE_CURRENT_LIMITED          _FAULT_D  // CHECKED_DP// Heater Fault    -->remove fault
 #define _FAULT_HEATER_RAMP_TIMEOUT                     _FAULT_E  // CHECKED_DP// Heater Fault
 #define _FAULT_HEATER_STARTUP_FAILURE                  _FAULT_F
 
