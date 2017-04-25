@@ -366,9 +366,9 @@
 
 // ----------- Timers configurations - ALL Times are in 10ms Units --------------------
 #define LED_STARTUP_FLASH_TIME                500      // Time LEDs will flash at startup
-#define MAX_HEATER_RAMP_UP_TIME               21000    // (3.5min) If the heater does not reach it's programed voltage in this time a fault will be generated
+#define MAX_HEATER_RAMP_UP_TIME               42000//21000    // (3.5min) If the heater does not reach it's programed voltage in this time a fault will be generated
 #define HEATER_AUTO_RESTART_TIME              500      // Time delay between a heater fault and when the heater gets restarted
-#define HEATER_RAMP_UP_TIME_PERIOD            30       // (300ms) During heater ramp up, the heater voltage will be increased every N 10ms (see HEATER_RAMP_UP_INCREMENT)
+#define HEATER_RAMP_UP_TIME_PERIOD            60//30       // (300ms) During heater ramp up, the heater voltage will be increased every N 10ms (see HEATER_RAMP_UP_INCREMENT)
 #define GUN_DRIVER_POWER_SUPPLY_STARTUP_TIME  100      // Wait this long between enabling High Voltage / Pulse Top / Bias and cheching that they are at correct values
 
 #define HEATER_REGULATION_TIME_PERIOD         5        // (50ms) This is the period that the regulation of the heater voltage takes between increments

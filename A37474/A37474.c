@@ -1347,6 +1347,7 @@ void DoA37474(void) {
     if (global_data_A37474.control_state == STATE_HEATER_RAMP_UP) {
       global_data_A37474.heater_ramp_interval++;
       if (global_data_A37474.heater_ramp_interval >= HEATER_RAMP_UP_TIME_PERIOD) {
+        global_data_A37474.heater_ramp_interval = 0;
         global_data_A37474.analog_output_heater_voltage.set_point += HEATER_RAMP_UP_INCREMENT;  
       }  
         
