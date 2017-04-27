@@ -195,6 +195,7 @@ void DoStateMachine(void) {
     
   case STATE_HEATER_DISABLED:
     DisableHeater();
+    global_data_A37474.current_state_msg = STATE_MESSAGE_START_UP;
     global_data_A37474.watchdog_counter = 0;
     global_data_A37474.analog_output_heater_voltage.set_point = 0;
     global_data_A37474.heater_start_up_attempts = 0;
